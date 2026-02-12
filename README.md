@@ -1,2 +1,18 @@
-# origin-controlled-computing
-A system-level trust architecture where authenticated digital state is reachable only through enforced creation events.
+# Origin Controlled Computing
+
+Authentication as a Reachability Property
+
+---
+
+Origin Controlled Computing (OCC) is a system-level trust architecture in which authenticated digital state can exist only if it is finalized through an enforced creation path.
+
+## Whitepaper
+
+[Download Whitepaper](whitepaper/whitepaper.pdf)
+
+## Author
+
+Michael James Argento  
+Independent Research
+
+Portions of the systems and methods described in this work are the subject of pending U.S. utility patent applications.
