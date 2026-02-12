@@ -8,7 +8,7 @@ Origin Controlled Computing (OCC) is a system-level trust architecture in which 
 
 ## Whitepaper
 
-[Download Whitepaper](whitepaper/whitepaper.pdf)
+[Download Whitepaper](whitepaper.pdf)
 
 ## Author
 
