@@ -1,701 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OCC Notary + Verifier</title>
-  <style>
-    :root{
-      --bg:#0b0b0f;
-      --card:#111118;
-      --card2:#0f1016;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --border:rgba(255,255,255,0.10);
-      --border2:rgba(255,255,255,0.14);
-      --good:#22c55e;
-      --bad:#ef4444;
-      --accent:#3b82f6;
-      --accent2:#60a5fa;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      min-height:100vh;
-      background: radial-gradient(1100px 700px at 50% 10%, rgba(96,165,250,0.12), transparent 60%),
-                  radial-gradient(900px 700px at 20% 80%, rgba(34,197,94,0.08), transparent 60%),
-                  var(--bg);
-      color:var(--text);
-      font-family:var(--sans);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:34px 16px;
-    }
-    .wrap{width:min(980px, 100%)}
-    .header{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:14px;
-      margin-bottom:16px;
-    }
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-    .brand h1{
-      margin:0;
-      font-size:20px;
-      letter-spacing:-0.3px;
-      font-weight:650;
-    }
-    .brand p{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.45;
-      max-width:720px;
-    }
-    .pillrow{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .pill{
-      font-size:12px;
-      color:var(--muted);
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.03);
-      border-radius:999px;
-      padding:6px 10px;
-      white-space:nowrap;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OCC Notary + Verifier</title>
 
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-    @media (max-width: 900px){
-      .grid{grid-template-columns:1fr}
-      .pillrow{justify-content:flex-start}
-    }
+<style>
+:root{
+  --bg:#07080b;
+  --panel:rgba(255,255,255,.05);
+  --stroke:rgba(255,255,255,.10);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.6);
+  --good:#22c55e;
+  --bad:#ef4444;
+  --blue:#60a5fa;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:
+    radial-gradient(800px 500px at 20% 20%, rgba(96,165,250,.08), transparent 60%),
+    radial-gradient(800px 500px at 80% 30%, rgba(34,197,94,.06), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+.wrap{max-width:1100px;margin:auto;padding:32px 18px 60px;}
+h1{margin:0 0 6px;font-size:28px;letter-spacing:-.6px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
 
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-      border:1px solid var(--border);
-      border-radius:14px;
-      overflow:hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
-    }
-    .cardTop{
-      padding:14px 16px;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:rgba(255,255,255,0.02);
-    }
-    .title{
-      font-weight:700;
-      letter-spacing:-0.2px;
-      font-size:14px;
-    }
-    .hint{
-      color:var(--muted);
-      font-size:12px;
-    }
-    .body{
-      padding:16px;
-    }
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
 
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    input[type="file"]{
-      font-size:12px;
-      color:var(--muted);
-    }
-    .btn{
-      appearance:none;
-      border:1px solid var(--border2);
-      background:rgba(59,130,246,0.15);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:10px;
-      font-size:12.5px;
-      font-weight:650;
-      letter-spacing:-0.15px;
-      cursor:pointer;
-      transition:transform .04s ease, background .15s ease, border-color .15s ease;
-      user-select:none;
-    }
-    .btn:hover{background:rgba(59,130,246,0.22); border-color:rgba(96,165,250,0.55)}
-    .btn:active{transform:translateY(1px)}
-    .btn.secondary{
-      background:rgba(255,255,255,0.04);
-      border-color:var(--border);
-      color:var(--text);
-    }
-    .btn.secondary:hover{background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.20)}
-    .btn:disabled{
-      opacity:.45;
-      cursor:not-allowed;
-    }
-
-    .kv{
-      margin-top:14px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .field{
-      background:rgba(0,0,0,0.25);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px 10px;
-    }
-    .label{
-      font-size:11px;
-      color:var(--muted);
-      margin-bottom:6px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .value{
-      font-family:var(--mono);
-      font-size:12px;
-      line-height:1.45;
-      word-break:break-all;
-      white-space:pre-wrap;
-      color:#f3f4f6;
-    }
-    .miniBtn{
-      font-size:11px;
-      padding:6px 8px;
-      border-radius:10px;
-    }
-
-    .status{
-      margin-top:12px;
-      border-radius:12px;
-      padding:10px 12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.03);
-      color:var(--muted);
-      font-size:12.5px;
-      line-height:1.4;
-    }
-    .status.good{
-      border-color:rgba(34,197,94,0.35);
-      background:rgba(34,197,94,0.12);
-      color:#d1fae5;
-    }
-    .status.bad{
-      border-color:rgba(239,68,68,0.35);
-      background:rgba(239,68,68,0.12);
-      color:#fee2e2;
-    }
-    .foot{
-      margin-top:12px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-    .hr{
-      height:1px;
-      background:var(--border);
-      margin:14px 0;
-    }
-    .small{
-      font-size:11.5px;
-      color:var(--muted);
-    }
-    .badge{
-      font-family:var(--mono);
-      font-size:11px;
-      padding:5px 8px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.03);
-      color:var(--muted);
-      white-space:nowrap;
-    }
-  </style>
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  padding:18px;
+}
+.card h2{margin:0 0 8px;font-size:16px}
+.field{margin-top:12px}
+.label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=file]{padding:6px 8px;border-radius:10px;background:#000;border:1px solid var(--stroke);color:var(--muted)}
+button{
+  padding:9px 12px;
+  border-radius:10px;
+  border:1px solid var(--stroke);
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  font-weight:600;
+  cursor:pointer;
+}
+button.primary{background:rgba(96,165,250,.18);border-color:rgba(96,165,250,.4)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.kv{margin-top:12px;font-size:12px;font-family:ui-monospace,monospace;word-break:break-all}
+.status{
+  margin-top:12px;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--stroke);
+  font-size:12px;
+  color:var(--muted);
+}
+.status.ok{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);color:#86efac}
+.status.bad{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:#fca5a5}
+small{color:var(--muted)}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="header">
-      <div class="brand">
-        <h1>OCC Notary + Verifier</h1>
-        <p>
-          Demo-mode “origin event”: hash a file, generate a fresh key, sign the hash, and export a <span class="badge">proof.json</span>.
-          Then verify by re-hashing the file and validating the signature. (Client-side only.)
-        </p>
-      </div>
-      <div class="pillrow">
-        <div class="pill">SHA-256</div>
-        <div class="pill">Ed25519</div>
-        <div class="pill">Portable proof</div>
-        <div class="pill">No server</div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <!-- NOTARY -->
-      <div class="card">
-        <div class="cardTop">
-          <div>
-            <div class="title">Notary</div>
-            <div class="hint">Create proof.json for a file</div>
-          </div>
-          <div class="badge">v0.1</div>
-        </div>
-        <div class="body">
-          <div class="row">
-            <input id="notaryFile" type="file" />
-            <button id="btnNotarize" class="btn" disabled>Notarize (Hash + Sign)</button>
-            <button id="btnDownloadProof" class="btn secondary" disabled>Download proof.json</button>
-          </div>
-
-          <div class="kv">
-            <div class="field">
-              <div class="label">
-                <span>File</span>
-                <span class="small" id="notaryFileMeta">No file selected</span>
-              </div>
-              <div class="value" id="notaryFileName">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Content Hash (SHA-256)</span>
-                <button class="btn secondary miniBtn" id="copyNotaryHash" disabled>Copy</button>
-              </div>
-              <div class="value" id="notaryHash">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Public Key (Ed25519, raw)</span>
-                <button class="btn secondary miniBtn" id="copyNotaryPub" disabled>Copy</button>
-              </div>
-              <div class="value" id="notaryPub">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Signature (Ed25519, raw)</span>
-                <button class="btn secondary miniBtn" id="copyNotarySig" disabled>Copy</button>
-              </div>
-              <div class="value" id="notarySig">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Proof JSON Preview</span>
-                <button class="btn secondary miniBtn" id="copyNotaryProof" disabled>Copy</button>
-              </div>
-              <div class="value" id="notaryProofPreview">—</div>
-            </div>
-          </div>
-
-          <div class="status" id="notaryStatus">Select a file, then click <b>Notarize</b>.</div>
-
-          <div class="foot">
-            This is a minimal “portable proof” demo: <span class="badge">proof.json</span> contains the file hash, a fresh public key, and the signature.
-            In real OCC, the signing key lives in a protected boundary (TEE/HSM/Secure Enclave) and policy/trust anchors determine what keys are acceptable.
-          </div>
-        </div>
-      </div>
-
-      <!-- VERIFIER -->
-      <div class="card">
-        <div class="cardTop">
-          <div>
-            <div class="title">Verifier</div>
-            <div class="hint">Validate file + proof.json</div>
-          </div>
-          <div class="badge">offline</div>
-        </div>
-        <div class="body">
-          <div class="row">
-            <input id="verifyFile" type="file" />
-            <input id="verifyProof" type="file" accept="application/json,.json" />
-            <button id="btnVerify" class="btn" disabled>Verify</button>
-          </div>
-
-          <div class="kv">
-            <div class="field">
-              <div class="label">
-                <span>Inputs</span>
-                <span class="small" id="verifyInputsMeta">Select file + proof.json</span>
-              </div>
-              <div class="value" id="verifyInputs">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Recomputed Hash</span>
-                <button class="btn secondary miniBtn" id="copyVerifyHash" disabled>Copy</button>
-              </div>
-              <div class="value" id="verifyHash">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Proof Hash (from proof.json)</span>
-              </div>
-              <div class="value" id="proofHash">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Public Key (from proof.json)</span>
-              </div>
-              <div class="value" id="proofPub">—</div>
-            </div>
-
-            <div class="field">
-              <div class="label">
-                <span>Signature (from proof.json)</span>
-              </div>
-              <div class="value" id="proofSig">—</div>
-            </div>
-          </div>
-
-          <div class="status" id="verifyStatus">
-            Pick the same file and the corresponding <b>proof.json</b>, then click <b>Verify</b>.
-          </div>
-
-          <div class="hr"></div>
-          <div class="small">
-            ✅ <b>Valid</b> means: (1) file hash matches proof hash, and (2) signature verifies under proof public key. <br/>
-            🚫 This demo does <b>not</b> enforce trust anchors. In “real” mode, you’d validate the public key against an allowed set (manufacturer root, org policy, etc.).
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="wrap">
+  <h1>OCC Notary + Verifier</h1>
+  <div class="sub">
+    Hash a file, generate a fresh key, sign the hash, export proof.json. Then verify it — fully client-side.
   </div>
 
+  <div class="grid">
+
+    <!-- NOTARY -->
+    <div class="card">
+      <h2>Notary</h2>
+
+      <div class="field">
+        <div class="label">Artifact file</div>
+        <input id="notaryFile" type="file">
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="notarizeBtn" class="primary" disabled>Notarize</button>
+        <button id="downloadBtn" disabled>Download proof.json</button>
+      </div>
+
+      <div class="kv">
+        <div><strong>Hash:</strong> <span id="notaryHash">—</span></div>
+        <div><strong>Public Key (SPKI b64):</strong> <span id="notaryPub">—</span></div>
+        <div><strong>Signature (b64):</strong> <span id="notarySig">—</span></div>
+      </div>
+
+      <div id="notaryStatus" class="status">
+        Select a file, then click Notarize.
+      </div>
+    </div>
+
+    <!-- VERIFIER -->
+    <div class="card">
+      <h2>Verifier</h2>
+
+      <div class="field">
+        <div class="label">1) Artifact file</div>
+        <input id="verifyFile" type="file">
+      </div>
+
+      <div class="field">
+        <div class="label">2) proof.json</div>
+        <input id="verifyProof" type="file" accept="application/json,.json">
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="verifyBtn" class="primary" disabled>Verify</button>
+      </div>
+
+      <div class="kv">
+        <div><strong>Recomputed Hash:</strong> <span id="verifyHash">—</span></div>
+      </div>
+
+      <div id="verifyStatus" class="status">
+        Select artifact + proof.json, then click Verify.
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:20px">
+    <small>
+      Demo only. Real OCC deployments validate signer keys against trusted roots and enforce boundary constraints.
+    </small>
+  </div>
+
+</div>
+
 <script>
-/**
- * OCC Notary + Verifier (demo)
- * - Hash: SHA-256 over raw file bytes
- * - Signature: Ed25519 over the 32-byte SHA-256 digest bytes
- * - Proof JSON includes:
- *   {
- *     "version": "occ-proof-v0.1",
- *     "hash": { "alg": "SHA-256", "hex": "<...>" },
- *     "signature": { "alg": "Ed25519", "sig_b64": "<...>" },
- *     "public_key": { "alg": "Ed25519", "raw_b64": "<...>" },
- *     "file": { "name": "...", "size": 123, "type": "..." },
- *     "created_at": "ISO8601"
- *   }
- */
+const $ = id => document.getElementById(id);
 
-const $ = (id) => document.getElementById(id);
+let currentProof = null;
+let verifyFile = null;
+let verifyProof = null;
+let signingAlgo = null;
 
-function toHex(uint8) {
-  return Array.from(uint8).map(b => b.toString(16).padStart(2, '0')).join('');
+// ---- Utilities ----
+function bytesToHex(bytes){
+  return Array.from(bytes).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-function b64FromBytes(bytes) {
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin);
-}
-function bytesFromB64(b64) {
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-async function sha256Bytes(arrayBuffer) {
-  const digest = await crypto.subtle.digest('SHA-256', arrayBuffer);
-  return new Uint8Array(digest);
-}
-async function readFileAsArrayBuffer(file) {
-  return await file.arrayBuffer();
-}
-async function readFileAsText(file) {
-  return await file.text();
-}
-async function copyText(text) {
-  await navigator.clipboard.writeText(text);
-}
-
-function setStatus(el, kind, html) {
-  el.classList.remove('good','bad');
-  if (kind) el.classList.add(kind);
-  el.innerHTML = html;
-}
-
-let lastProofObj = null;
-
-// --- NOTARY ---
-const notaryFile = $('notaryFile');
-const btnNotarize = $('btnNotarize');
-const btnDownloadProof = $('btnDownloadProof');
-const notaryFileMeta = $('notaryFileMeta');
-const notaryFileName = $('notaryFileName');
-const notaryHash = $('notaryHash');
-const notaryPub = $('notaryPub');
-const notarySig = $('notarySig');
-const notaryProofPreview = $('notaryProofPreview');
-const notaryStatus = $('notaryStatus');
-
-const copyNotaryHash = $('copyNotaryHash');
-const copyNotaryPub = $('copyNotaryPub');
-const copyNotarySig = $('copyNotarySig');
-const copyNotaryProof = $('copyNotaryProof');
-
-notaryFile.addEventListener('change', () => {
-  const f = notaryFile.files?.[0];
-  if (!f) {
-    btnNotarize.disabled = true;
-    notaryFileMeta.textContent = "No file selected";
-    notaryFileName.textContent = "—";
-    return;
+function hexToBytes(hex){
+  const arr=new Uint8Array(hex.length/2);
+  for(let i=0;i<arr.length;i++){
+    arr[i]=parseInt(hex.substr(i*2,2),16);
   }
-  btnNotarize.disabled = false;
-  notaryFileMeta.textContent = `${f.size.toLocaleString()} bytes`;
-  notaryFileName.textContent = f.name || "(unnamed)";
-  setStatus(notaryStatus, null, `Ready. Click <b>Notarize</b> to create <span class="badge">proof.json</span>.`);
+  return arr;
+}
+function bytesToB64(bytes){
+  return btoa(String.fromCharCode(...bytes));
+}
+function b64ToBytes(b64){
+  const bin=atob(b64);
+  return Uint8Array.from(bin,c=>c.charCodeAt(0));
+}
+async function sha256Hex(file){
+  const buf=await file.arrayBuffer();
+  const hash=await crypto.subtle.digest("SHA-256",buf);
+  return bytesToHex(new Uint8Array(hash));
+}
+function setStatus(el,type,msg){
+  el.classList.remove("ok","bad");
+  if(type) el.classList.add(type);
+  el.innerHTML=msg;
+}
+
+// ---- Pick algorithm (Ed25519 preferred) ----
+(async()=>{
+  try{
+    await crypto.subtle.generateKey({name:"Ed25519"},true,["sign","verify"]);
+    signingAlgo="Ed25519";
+  }catch{
+    signingAlgo="ECDSA";
+  }
+})();
+
+// ---- Notary ----
+$("notaryFile").addEventListener("change",e=>{
+  $("notarizeBtn").disabled=!e.target.files.length;
 });
 
-btnNotarize.addEventListener('click', async () => {
-  const f = notaryFile.files?.[0];
-  if (!f) return;
+$("notarizeBtn").addEventListener("click",async()=>{
+  const file=$("notaryFile").files[0];
+  if(!file) return;
 
-  btnNotarize.disabled = true;
-  btnDownloadProof.disabled = true;
-  copyNotaryHash.disabled = true;
-  copyNotaryPub.disabled = true;
-  copyNotarySig.disabled = true;
-  copyNotaryProof.disabled = true;
+  try{
+    const hashHex=await sha256Hex(file);
+    $("notaryHash").textContent=hashHex;
 
-  notaryHash.textContent = "…";
-  notaryPub.textContent = "…";
-  notarySig.textContent = "…";
-  notaryProofPreview.textContent = "…";
-  setStatus(notaryStatus, null, `Working… hashing + generating key + signing.`);
+    let keypair;
+    if(signingAlgo==="Ed25519"){
+      keypair=await crypto.subtle.generateKey({name:"Ed25519"},true,["sign","verify"]);
+    }else{
+      keypair=await crypto.subtle.generateKey({name:"ECDSA",namedCurve:"P-256"},true,["sign","verify"]);
+    }
 
-  try {
-    const buf = await readFileAsArrayBuffer(f);
-    const hashBytes = await sha256Bytes(buf);
-    const hashHex = toHex(hashBytes);
-
-    // Generate ephemeral Ed25519 keypair
-    const keyPair = await crypto.subtle.generateKey(
-      { name: "Ed25519" },
-      true, // extractable (demo). In real OCC, private key is non-extractable inside boundary.
-      ["sign", "verify"]
+    const msg=hexToBytes(hashHex);
+    const sigBuf=await crypto.subtle.sign(
+      signingAlgo==="Ed25519"
+        ? {name:"Ed25519"}
+        : {name:"ECDSA",hash:"SHA-256"},
+      keypair.privateKey,
+      msg
     );
+    const sigB64=bytesToB64(new Uint8Array(sigBuf));
 
-    // Sign the 32-byte digest (hash bytes)
-    const sigBuf = await crypto.subtle.sign({ name: "Ed25519" }, keyPair.privateKey, hashBytes);
-    const sigBytes = new Uint8Array(sigBuf);
+    const pubSpki=await crypto.subtle.exportKey("spki",keypair.publicKey);
+    const pubB64=bytesToB64(new Uint8Array(pubSpki));
 
-    // Export public key (raw)
-    const pubRaw = new Uint8Array(await crypto.subtle.exportKey("raw", keyPair.publicKey));
+    $("notaryPub").textContent=pubB64;
+    $("notarySig").textContent=sigB64;
 
-    // Construct proof object
-    const proof = {
-      version: "occ-proof-v0.1",
-      hash: { alg: "SHA-256", hex: hashHex },
-      signature: { alg: "Ed25519", sig_b64: b64FromBytes(sigBytes) },
-      public_key: { alg: "Ed25519", raw_b64: b64FromBytes(pubRaw) },
-      file: { name: f.name || "", size: f.size, type: f.type || "" },
-      created_at: new Date().toISOString()
+    currentProof={
+      version:"occ-proof-v1",
+      createdAt:new Date().toISOString(),
+      hash:{alg:"SHA-256",hex:hashHex},
+      signature:{
+        alg:signingAlgo,
+        publicKeySpkiB64:pubB64,
+        sigB64:sigB64
+      }
     };
 
-    lastProofObj = proof;
+    $("downloadBtn").disabled=false;
+    setStatus($("notaryStatus"),"ok","Proof created. Download proof.json.");
 
-    notaryHash.textContent = hashHex;
-    notaryPub.textContent = proof.public_key.raw_b64;
-    notarySig.textContent = proof.signature.sig_b64;
-    notaryProofPreview.textContent = JSON.stringify(proof, null, 2);
-
-    btnDownloadProof.disabled = false;
-    copyNotaryHash.disabled = false;
-    copyNotaryPub.disabled = false;
-    copyNotarySig.disabled = false;
-    copyNotaryProof.disabled = false;
-
-    setStatus(
-      notaryStatus,
-      "good",
-      `✅ Notarized. Download <span class="badge">proof.json</span> or verify it on the right.`
-    );
-  } catch (err) {
-    console.error(err);
-    setStatus(notaryStatus, "bad", `🚫 Failed: ${String(err?.message || err)}`);
-  } finally {
-    btnNotarize.disabled = !(notaryFile.files?.[0]);
+  }catch(err){
+    setStatus($("notaryStatus"),"bad","Error: "+err.message);
   }
 });
 
-btnDownloadProof.addEventListener('click', () => {
-  if (!lastProofObj) return;
-  const json = JSON.stringify(lastProofObj, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "proof.json";
-  document.body.appendChild(a);
+$("downloadBtn").addEventListener("click",()=>{
+  if(!currentProof) return;
+  const blob=new Blob([JSON.stringify(currentProof,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="proof.json";
   a.click();
-  a.remove();
   URL.revokeObjectURL(url);
 });
 
-copyNotaryHash.addEventListener('click', async () => copyText(notaryHash.textContent || ""));
-copyNotaryPub.addEventListener('click', async () => copyText(notaryPub.textContent || ""));
-copyNotarySig.addEventListener('click', async () => copyText(notarySig.textContent || ""));
-copyNotaryProof.addEventListener('click', async () => copyText(notaryProofPreview.textContent || ""));
-
-// --- VERIFIER ---
-const verifyFile = $('verifyFile');
-const verifyProof = $('verifyProof');
-const btnVerify = $('btnVerify');
-
-const verifyInputsMeta = $('verifyInputsMeta');
-const verifyInputs = $('verifyInputs');
-const verifyHash = $('verifyHash');
-const proofHash = $('proofHash');
-const proofPub = $('proofPub');
-const proofSig = $('proofSig');
-const verifyStatus = $('verifyStatus');
-
-const copyVerifyHash = $('copyVerifyHash');
-
-function updateVerifyReady() {
-  const f = verifyFile.files?.[0];
-  const p = verifyProof.files?.[0];
-  btnVerify.disabled = !(f && p);
-  if (!f && !p) {
-    verifyInputsMeta.textContent = "Select file + proof.json";
-    verifyInputs.textContent = "—";
-    return;
+// ---- Verifier ----
+$("verifyFile").addEventListener("change",e=>{
+  verifyFile=e.target.files[0]||null;
+  $("verifyBtn").disabled=!(verifyFile&&verifyProof);
+});
+$("verifyProof").addEventListener("change",async e=>{
+  const f=e.target.files[0];
+  verifyProof=null;
+  if(!f) return;
+  try{
+    verifyProof=JSON.parse(await f.text());
+  }catch{
+    verifyProof=null;
   }
-  const parts = [];
-  if (f) parts.push(`file: ${f.name} (${f.size.toLocaleString()} bytes)`);
-  if (p) parts.push(`proof: ${p.name}`);
-  verifyInputs.textContent = parts.join('\n');
-  verifyInputsMeta.textContent = (f && p) ? "Ready to verify" : "Missing one input";
-}
+  $("verifyBtn").disabled=!(verifyFile&&verifyProof);
+});
 
-verifyFile.addEventListener('change', updateVerifyReady);
-verifyProof.addEventListener('change', updateVerifyReady);
+$("verifyBtn").addEventListener("click",async()=>{
+  try{
+    const recomputed=await sha256Hex(verifyFile);
+    $("verifyHash").textContent=recomputed;
 
-btnVerify.addEventListener('click', async () => {
-  const f = verifyFile.files?.[0];
-  const p = verifyProof.files?.[0];
-  if (!(f && p)) return;
-
-  btnVerify.disabled = true;
-  copyVerifyHash.disabled = true;
-  verifyHash.textContent = "…";
-  proofHash.textContent = "…";
-  proofPub.textContent = "…";
-  proofSig.textContent = "…";
-  setStatus(verifyStatus, null, "Working… re-hashing file + verifying signature.");
-
-  try {
-    const proofText = await readFileAsText(p);
-    let proof;
-    try {
-      proof = JSON.parse(proofText);
-    } catch {
-      throw new Error("proof.json is not valid JSON.");
-    }
-
-    // Basic shape checks
-    if (!proof?.hash?.hex || !proof?.public_key?.raw_b64 || !proof?.signature?.sig_b64) {
-      throw new Error("proof.json missing required fields (hash.hex, public_key.raw_b64, signature.sig_b64).");
-    }
-    if (proof?.hash?.alg !== "SHA-256") {
-      throw new Error(`Unsupported hash alg: ${proof?.hash?.alg}. Expected SHA-256.`);
-    }
-    if (proof?.public_key?.alg !== "Ed25519" || proof?.signature?.alg !== "Ed25519") {
-      throw new Error("Unsupported signature/public key alg. Expected Ed25519.");
-    }
-
-    const buf = await readFileAsArrayBuffer(f);
-    const hashBytes = await sha256Bytes(buf);
-    const hashHex = toHex(hashBytes);
-
-    verifyHash.textContent = hashHex;
-    proofHash.textContent = proof.hash.hex;
-    proofPub.textContent = proof.public_key.raw_b64;
-    proofSig.textContent = proof.signature.sig_b64;
-
-    copyVerifyHash.disabled = false;
-
-    // 1) hash match
-    const hashMatch = (hashHex.toLowerCase() === String(proof.hash.hex).toLowerCase());
-    if (!hashMatch) {
-      setStatus(
-        verifyStatus,
-        "bad",
-        `🚫 INVALID: File hash does not match proof hash. (Different file or content changed.)`
-      );
+    if(recomputed!==verifyProof.hash.hex){
+      setStatus($("verifyStatus"),"bad","Hash mismatch.");
       return;
     }
 
-    // 2) signature verify
-    const pubRaw = bytesFromB64(proof.public_key.raw_b64);
-    const sig = bytesFromB64(proof.signature.sig_b64);
-
-    const pubKey = await crypto.subtle.importKey(
-      "raw",
-      pubRaw,
-      { name: "Ed25519" },
+    const pubKey=await crypto.subtle.importKey(
+      "spki",
+      b64ToBytes(verifyProof.signature.publicKeySpkiB64),
+      verifyProof.signature.alg==="Ed25519"
+        ? {name:"Ed25519"}
+        : {name:"ECDSA",namedCurve:"P-256"},
       true,
       ["verify"]
     );
 
-    const ok = await crypto.subtle.verify(
-      { name: "Ed25519" },
+    const ok=await crypto.subtle.verify(
+      verifyProof.signature.alg==="Ed25519"
+        ? {name:"Ed25519"}
+        : {name:"ECDSA",hash:"SHA-256"},
       pubKey,
-      sig,
-      hashBytes // verify over digest bytes
+      b64ToBytes(verifyProof.signature.sigB64),
+      hexToBytes(verifyProof.hash.hex)
     );
 
-    if (!ok) {
-      setStatus(
-        verifyStatus,
-        "bad",
-        `🚫 INVALID: Signature did not verify under the provided public key.`
-      );
-      return;
+    if(ok){
+      setStatus($("verifyStatus"),"ok","Valid: hash matches and signature verifies.");
+    }else{
+      setStatus($("verifyStatus"),"bad","Signature invalid.");
     }
 
-    setStatus(
-      verifyStatus,
-      "good",
-      `✅ VALID: Hash matches and signature verifies. (Demo trust model: accepts the key embedded in proof.)`
-    );
-
-  } catch (err) {
-    console.error(err);
-    setStatus(verifyStatus, "bad", `🚫 Failed: ${String(err?.message || err)}`);
-  } finally {
-    updateVerifyReady();
+  }catch(err){
+    setStatus($("verifyStatus"),"bad","Error: "+err.message);
   }
 });
-
-copyVerifyHash.addEventListener('click', async () => copyText(verifyHash.textContent || ""));
-
-// Initialize
-updateVerifyReady();
 </script>
+
 </body>
 </html>
