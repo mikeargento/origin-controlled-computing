@@ -5,10 +5,7 @@ Authentication as a Reachability Property
 
 Origin Controlled Computing (OCC) is a system-level trust architecture in which authenticated digital state can exist only if it is finalized through an enforced creation path.
 
-[View Whitepaper](https://mikeargento.github.io/origin-controlled-computing/) · Reference implementation: [mikeargento/occ-core](https://github.com/mikeargento/occ-core)
-
-## Whitepaper
-[Download Whitepaper](whitepaper.pdf)
+[View Whitepaper](https://mikeargento.github.io/origin-controlled-computing/) · [Download PDF](whitepaper.pdf) · Reference implementation: [mikeargento/occ-core](https://github.com/mikeargento/occ-core)
 
 ## Author
 Michael James Argento  
